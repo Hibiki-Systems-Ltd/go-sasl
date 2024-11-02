@@ -18,13 +18,14 @@ type XOAuth2Error struct {
 }
 
 type XOAuth2Options struct {
-	Username string
-	Token    string
+	Username  string
+	Token     string
+	TokenType string
 }
 
 // Implements error
 func (err *XOAuth2Error) Error() string {
-	return fmt.Sprintf("XOAUTH2 authentication error (%v)", err.Status)
+	return fmt.Sprintf("XOAUTH2 authentication error (Status: %v) (Scope: %v) (Schemes: %v)", err.Status, err.Scope, err.Schemes)
 }
 
 type xoauth2Client struct {
@@ -32,12 +33,7 @@ type xoauth2Client struct {
 }
 
 func (a *xoauth2Client) Start() (mech string, ir []byte, err error) {
-	ir = []byte(`user=`)
-	ir = append(ir, a.Username...)
-	ir = append(ir, '\x01')
-	ir = append(ir, []byte(`auth=Bearer `)...)
-	ir = append(ir, a.Token...)
-	ir = append(ir, '\x01', '\x01')
+	ir = []byte(fmt.Sprintf(`user=%s\x01auth=%s %s\x01\x01`, a.Username, a.TokenType, a.Token))
 
 	return XOAuth2, ir, nil
 }
